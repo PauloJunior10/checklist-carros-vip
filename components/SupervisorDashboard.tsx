@@ -22,7 +22,7 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ checklists, v
 
   const filteredChecklists = useMemo(() => {
     return checklists.filter(c => {
-      const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK') || c.observations;
+      const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK');
       if (filterVehicle !== 'all' && c.vehicle_plate !== filterVehicle) return false;
       if (filterEmployee && !c.responsible_name.toLowerCase().includes(filterEmployee.toLowerCase())) return false;
       if (filterStatus === 'issues' && !hasIssue) return false;
@@ -86,7 +86,7 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ checklists, v
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredChecklists.length > 0 ? filteredChecklists.map(c => {
-              const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK') || c.observations;
+              const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK');
               return (
                 <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
