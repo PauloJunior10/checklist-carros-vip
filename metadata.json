@@ -1,0 +1,8 @@
+
+{
+  "name": "Corporate Vehicle Checklist",
+  "description": "A digital system for controlling and inspecting corporate vehicles. Employees can fill out checklists before using vehicles, and supervisors can monitor all inspections performed.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
