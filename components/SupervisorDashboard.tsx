@@ -22,9 +22,9 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ checklists, v
 
   const filteredChecklists = useMemo(() => {
     return checklists.filter(c => {
-      const hasIssue = c.checklistItems.some(item => item.status === 'NOT_OK') || c.observations;
-      if (filterVehicle !== 'all' && c.vehiclePlate !== filterVehicle) return false;
-      if (filterEmployee && !c.responsibleName.toLowerCase().includes(filterEmployee.toLowerCase())) return false;
+      const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK') || c.observations;
+      if (filterVehicle !== 'all' && c.vehicle_plate !== filterVehicle) return false;
+      if (filterEmployee && !c.responsible_name.toLowerCase().includes(filterEmployee.toLowerCase())) return false;
       if (filterStatus === 'issues' && !hasIssue) return false;
       if (filterStatus === 'ok' && hasIssue) return false;
       if (filterDate && !c.timestamp.startsWith(filterDate)) return false;
@@ -86,7 +86,7 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ checklists, v
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredChecklists.length > 0 ? filteredChecklists.map(c => {
-              const hasIssue = c.checklistItems.some(item => item.status === 'NOT_OK') || c.observations;
+              const hasIssue = c.checklist_items.some(item => item.status === 'NOT_OK') || c.observations;
               return (
                 <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -97,11 +97,11 @@ const SupervisorDashboard: React.FC<SupervisorDashboardProps> = ({ checklists, v
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(c.timestamp).toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.responsibleName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.vehiclePlate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{c.responsible_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.vehicle_plate}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{c.mileage.toLocaleString('pt-BR')}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {c.returnMileage ? c.returnMileage.toLocaleString('pt-BR') : 'N/A'}
+                    {c.return_mileage ? c.return_mileage.toLocaleString('pt-BR') : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button onClick={() => setSelectedChecklist(c)} className="text-green-600 hover:text-green-800 font-semibold">Ver Detalhes</button>

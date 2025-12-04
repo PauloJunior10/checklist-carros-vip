@@ -1,6 +1,4 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { Checklist, Vehicle, View } from './types';
 import ChecklistForm from './components/ChecklistForm';
 import SupervisorDashboard from './components/SupervisorDashboard';
 import Login from './components/Login';
@@ -8,55 +6,42 @@ import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
 
-const initialMockVehicles: Vehicle[] = [
-  { id: '1', plate: 'ABC-1234', model: 'Fiat Mobi', brand: 'Fiat', year: 2022 },
-  { id: '2', plate: 'XYZ-5678', model: 'Renault Kwid', brand: 'Renault', year: 2023 },
-  { id: '3', plate: 'QWE-9101', model: 'VW Gol', brand: 'Volkswagen', year: 2021 },
-  { id: '4', plate: 'RTY-1121', model: 'Chevrolet Onix', brand: 'Chevrolet', year: 2023 },
-];
-
-const mockChecklists: Checklist[] = [
-    {
-        id: 'cl1',
-        responsibleName: 'John Doe',
-        vehiclePlate: 'ABC-1234',
-        mileage: 54321,
-        returnMileage: 54450,
-        checklistItems: [
-            { id: 'exterior', label: 'Condição externa (lataria, vidros, faróis)', status: 'OK' },
-            { id: 'interior', label: 'Condição interna (bancos, painel, limpeza)', status: 'OK' },
-            { id: 'fuel', label: 'Nível de combustível', status: 'OK' },
-            { id: 'tires', label: 'Calibragem e estado dos pneus', status: 'NOT_OK' },
-            { id: 'equipment', label: 'Equipamentos obrigatórios (triângulo, macaco)', status: 'OK' },
-        ],
-        photos: [],
-        observations: 'Pneu dianteiro direito parece um pouco murcho.',
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-        id: 'cl2',
-        responsibleName: 'Jane Smith',
-        vehiclePlate: 'XYZ-5678',
-        mileage: 12345,
-        checklistItems: [
-            { id: 'exterior', label: 'Condição externa (lataria, vidros, faróis)', status: 'OK' },
-            { id: 'interior', label: 'Condição interna (bancos, painel, limpeza)', status: 'OK' },
-            { id: 'fuel', label: 'Nível de combustível', status: 'OK' },
-            { id: 'tires', label: 'Calibragem e estado dos pneus', status: 'OK' },
-            { id: 'equipment', label: 'Equipamentos obrigatórios (triângulo, macaco)', status: 'OK' },
-        ],
-        photos: [],
-        observations: '',
-        timestamp: new Date(Date.now() - 172800000).toISOString(),
-    }
-];
-
 const App: React.FC = () => {
   const [view, setView] = useState<View>(View.EMPLOYEE);
-  const [checklists, setChecklists] = useState<Checklist[]>(mockChecklists);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(initialMockVehicles);
+  const [checklists, setChecklists] = useState<Checklist[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [session, setSession] = useState<Session | null>(null);
 
+  const fetchVehicles = useCallback(async () => {
+    const { data, error } = await supabase.from('vehicles').select('*');
+    if (error) {
+      console.error('Erro ao buscar veículos:', error);
+    } else {
+      setVehicles(data as Vehicle[]);
+    }
+  }, []);
+
+  const fetchChecklists = useCallback(async () => {
+    const { data, error } = await supabase.from('checklists').select('*');
+    if (error) {
+      console.error('Erro ao buscar checklists:', error);
+    } else {
+      // É importante transformar os nomes das colunas de snake_case para camelCase
+      const formattedChecklists = data.map(item => ({
+        id: item.id,
+        responsible_name: item.responsible_name,
+        vehiclePlate: item.vehicle_plate,
+        mileage: item.mileage,
+        returnMileage: item.return_mileage,
+        checklistItems: item.checklist_items,
+        photos: item.photos,
+        observations: item.observations,
+        timestamp: item.timestamp,
+        vehicle_id: item.vehicle_id,
+      }));
+      setChecklists(formattedChecklists as Checklist[]);
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,26 +55,96 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    fetchVehicles();
+    fetchChecklists();
+  }, [session, fetchVehicles, fetchChecklists]);
 
-  const addChecklist = useCallback((checklist: Omit<Checklist, 'id' | 'timestamp'>) => {
-    const newChecklist: Checklist = {
-      ...checklist,
-      id: `cl${Date.now()}`,
+
+  const addChecklist = useCallback(async (checklist: Omit<Checklist, 'id' | 'timestamp' | 'vehicle_id'>) => {
+    // Buscar o vehicle_id com base no vehiclePlate
+    const { data: vehicleData, error: vehicleError } = await supabase
+      .from('vehicles')
+      .select('id')
+      .eq('plate', checklist.vehicle_plate)
+      .single();
+
+    if (vehicleError || !vehicleData) {
+      console.error('Erro ao buscar ID do veículo:', vehicleError?.message);
+      alert('Veículo não encontrado. Por favor, verifique a placa.');
+      return;
+    }
+
+    const newChecklist = {
+      responsible_name: checklist.responsible_name,
+      vehicle_plate: checklist.vehicle_plate,
+      mileage: checklist.mileage,
+      return_mileage: checklist.return_mileage,
+      checklist_items: checklist.checklist_items,
+      photos: checklist.photos,
+      observations: checklist.observations,
       timestamp: new Date().toISOString(),
+      vehicle_id: vehicleData.id,
     };
-    setChecklists(prevChecklists => [newChecklist, ...prevChecklists]);
+
+    const { data, error } = await supabase
+      .from('checklists')
+      .insert([newChecklist])
+      .select();
+
+    if (error) {
+      console.error('Erro ao adicionar checklist:', error);
+    } else if (data && data.length > 0) {
+      // Formatar os dados retornados do Supabase para o formato da interface Checklist
+      const addedChecklist: Checklist = {
+        id: data[0].id,
+        responsible_name: data[0].responsible_name,
+        vehicle_plate: data[0].vehicle_plate,
+        mileage: data[0].mileage,
+        return_mileage: data[0].return_mileage,
+        checklist_items: data[0].checklist_items,
+        photos: data[0].photos,
+        observations: data[0].observations,
+        timestamp: data[0].timestamp,
+        vehicle_id: data[0].vehicle_id,
+      };
+      setChecklists(prevChecklists => [addedChecklist, ...prevChecklists]);
+    }
   }, []);
 
-  const addVehicle = useCallback((vehicle: Omit<Vehicle, 'id'>) => {
-    const newVehicle: Vehicle = {
-      ...vehicle,
-      id: `vh${Date.now()}`,
-    };
-    setVehicles(prevVehicles => [newVehicle, ...prevVehicles]);
+  const addVehicle = useCallback(async (vehicle: Omit<Vehicle, 'id'>) => {
+    const { data, error } = await supabase
+      .from('vehicles')
+      .insert([{
+        plate: vehicle.plate,
+        model: vehicle.model,
+        brand: vehicle.brand,
+        year: vehicle.year,
+      }])
+      .select();
+
+    if (error) {
+      console.error('Erro ao adicionar veículo:', error);
+      alert(`Erro ao adicionar veículo: ${error.message}. A placa ${vehicle.plate} já pode existir.`);
+    } else if (data && data.length > 0) {
+      setVehicles(prevVehicles => [...prevVehicles, data[0] as Vehicle]);
+    }
   }, []);
 
-  const deleteVehicle = useCallback((vehicleId: string) => {
-    setVehicles(prevVehicles => prevVehicles.filter(v => v.id !== vehicleId));
+  const deleteVehicle = useCallback(async (vehicleId: string) => {
+    const { error } = await supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', vehicleId);
+
+    if (error) {
+      console.error('Erro ao deletar veículo:', error);
+      alert(`Erro ao deletar veículo: ${error.message}.`);
+    } else {
+      setVehicles(prevVehicles => prevVehicles.filter(v => v.id !== vehicleId));
+      // Optionally, also delete related checklists or update them to nullify vehicle_id
+      // For now, we just delete the vehicle.
+    }
   }, []);
 
   const handleLogout = async () => {

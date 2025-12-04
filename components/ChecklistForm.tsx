@@ -5,7 +5,7 @@ import { CameraIcon, TrashIcon } from './icons/Icons';
 
 interface ChecklistFormProps {
   vehicles: Vehicle[];
-  onSubmit: (checklist: Omit<Checklist, 'id' | 'timestamp'>) => void;
+  onSubmit: (checklist: Omit<Checklist, 'id' | 'timestamp' | 'vehicle_id'>) => void;
 }
 
 const initialChecklistItems: ChecklistItem[] = [
@@ -65,7 +65,7 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ vehicles, onSubmit }) => 
     setError('');
   }, [vehicles]);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => { // Tornar handleSubmit assíncrono
     event.preventDefault();
     if (!responsibleName || !vehiclePlate || !mileage) {
       setError('Por favor, preencha todos os campos obrigatórios.');
@@ -77,25 +77,29 @@ const ChecklistForm: React.FC<ChecklistFormProps> = ({ vehicles, onSubmit }) => 
     }
     setError('');
     setIsSubmitting(true);
+    setSuccess(false); // Resetar sucesso ao tentar enviar novamente
     
-    setTimeout(() => {
-      const data: Omit<Checklist, 'id' | 'timestamp'> = {
-        responsibleName,
-        vehiclePlate,
-        mileage: Number(mileage),
-        checklistItems,
-        photos,
-        observations,
-      };
-      if (returnMileage) {
-          data.returnMileage = Number(returnMileage);
-      }
-      onSubmit(data);
-      setIsSubmitting(false);
-      setSuccess(true);
-      resetForm();
-      setTimeout(() => setSuccess(false), 5000);
-    }, 1000);
+    // Remover o setTimeout, pois a operação agora é assíncrona com o Supabase
+    const data: Omit<Checklist, 'id' | 'timestamp' | 'vehicle_id'> = {
+      responsible_name: responsibleName,
+      vehicle_plate: vehiclePlate,
+      mileage: Number(mileage),
+      checklist_items: checklistItems,
+      photos: photos,
+      observations: observations,
+    };
+    if (returnMileage) {
+        data.return_mileage = Number(returnMileage);
+    }
+    
+    // A função onSubmit (addChecklist em App.tsx) já é assíncrona e lida com a inserção no Supabase.
+    // Ela também lida com erros e atualiza o estado de checklists.
+    await onSubmit(data); // Chamar onSubmit e aguardar sua conclusão
+    
+    setIsSubmitting(false);
+    setSuccess(true); // Assumir sucesso após onSubmit, o tratamento de erro mais específico está em App.tsx
+    resetForm();
+    setTimeout(() => setSuccess(false), 5000);
   };
 
   return (

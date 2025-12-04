@@ -23,7 +23,7 @@ const ChecklistDetailModal: React.FC<ChecklistDetailModalProps> = ({ checklist, 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div className="bg-gray-50 p-3 rounded-md">
                     <p className="font-semibold text-gray-600">Funcionário</p>
-                    <p className="text-gray-900">{checklist.responsibleName}</p>
+                    <p className="text-gray-900">{checklist.responsible_name}</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md">
                     <p className="font-semibold text-gray-600">Data e Hora</p>
@@ -31,16 +31,16 @@ const ChecklistDetailModal: React.FC<ChecklistDetailModalProps> = ({ checklist, 
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md">
                     <p className="font-semibold text-gray-600">Veículo (Placa)</p>
-                    <p className="text-gray-900">{checklist.vehiclePlate}</p>
+                    <p className="text-gray-900">{checklist.vehicle_plate}</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md">
                     <p className="font-semibold text-gray-600">Quilometragem de Retirada</p>
                     <p className="text-gray-900">{checklist.mileage.toLocaleString('pt-BR')} km</p>
                 </div>
-                {checklist.returnMileage && (
+                {checklist.return_mileage && (
                      <div className="bg-gray-50 p-3 rounded-md">
                         <p className="font-semibold text-gray-600">Quilometragem de Devolução</p>
-                        <p className="text-gray-900">{checklist.returnMileage.toLocaleString('pt-BR')} km</p>
+                        <p className="text-gray-900">{checklist.return_mileage.toLocaleString('pt-BR')} km</p>
                     </div>
                 )}
             </div>
@@ -48,7 +48,7 @@ const ChecklistDetailModal: React.FC<ChecklistDetailModalProps> = ({ checklist, 
             <div>
                 <h4 className="font-semibold text-gray-700 mb-2">Itens Verificados</h4>
                 <ul className="space-y-2">
-                    {checklist.checklistItems.map(item => (
+                    {checklist.checklist_items.map(item => (
                         <li key={item.id} className="flex items-center justify-between p-3 rounded-md border">
                             <span className="text-gray-700">{item.label}</span>
                             {item.status === 'OK' ? (
@@ -68,7 +68,7 @@ const ChecklistDetailModal: React.FC<ChecklistDetailModalProps> = ({ checklist, 
                 </div>
             )}
 
-            {checklist.photos.length > 0 && (
+            {checklist.photos && checklist.photos.length > 0 && (
                 <div>
                     <h4 className="font-semibold text-gray-700 mb-2">Fotos</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

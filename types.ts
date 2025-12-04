@@ -17,15 +17,15 @@ export interface ChecklistItem {
 
 export interface Checklist {
   id: string;
-  responsibleName: string;
-  vehiclePlate: string;
+  responsible_name: string;
+  vehicle_plate: string;
   mileage: number;
-  returnMileage?: number;
-  // FIX: Added missing checklistItems property to the Checklist interface.
-  checklistItems: ChecklistItem[];
-  photos: string[]; // array of base64 strings
-  observations: string;
+  return_mileage?: number;
+  checklist_items: ChecklistItem[];
+  photos?: string[]; // array of base64 strings
+  observations?: string;
   timestamp: string;
+  vehicle_id?: string; // Foreign key
 }
 
 export enum View {
