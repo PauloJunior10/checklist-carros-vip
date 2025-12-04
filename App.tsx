@@ -1,4 +1,7 @@
 
+import React, { useState, useCallback, useEffect } from 'react';
+import type { Checklist, Vehicle } from './types';
+import { View } from './types';
 import ChecklistForm from './components/ChecklistForm';
 import SupervisorDashboard from './components/SupervisorDashboard';
 import Login from './components/Login';
@@ -30,10 +33,10 @@ const App: React.FC = () => {
       const formattedChecklists = data.map(item => ({
         id: item.id,
         responsible_name: item.responsible_name,
-        vehiclePlate: item.vehicle_plate,
+        vehicle_plate: item.vehicle_plate,
         mileage: item.mileage,
-        returnMileage: item.return_mileage,
-        checklistItems: item.checklist_items,
+        return_mileage: item.return_mileage,
+        checklist_items: item.checklist_items,
         photos: item.photos,
         observations: item.observations,
         timestamp: item.timestamp,
